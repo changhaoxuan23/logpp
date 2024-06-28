@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <logpp.hh>
 #include <print>
 #include <ranges>
@@ -41,18 +42,21 @@ write_log(LogPP::LogLevel level, std::vector<std::string> &chain, std::string &&
   }
   prefix.push_back(' ');
   std::string suffix = "\x1b[0m";
-  size_t      start  = 0;
+  std::string buffer;
+  size_t      start = 0;
   while (true) {
     auto find = content.find('\n', start);
     if (find == content.npos) {
       if (start < content.size()) {
-        std::println("{}{}{}", prefix, content.substr(start), suffix);
+        buffer.append(std::format("{}{}{}\n", prefix, content.substr(start), suffix));
       }
       break;
     }
-    std::println("{}{}{}", prefix, content.substr(start, find - start), suffix);
+    buffer.append(std::format("{}{}{}\n", prefix, content.substr(start, find - start), suffix));
     start = find + 1;
   }
+  std::print("{}", buffer);
+  ::fflush(stdout);
 }
 }; // namespace
 void LogPP::Logger::do_log(
@@ -80,3 +84,5 @@ LogPP::Logger &LogPP::Logger::get_global_logger() {
   return {this, name};
 }
 void LogPP::Logger::set_log_level(LogLevel new_level) { this->log_level = new_level; }
+
+LogPP::Logger &LogPP::logger = Logger::get_global_logger();

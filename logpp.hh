@@ -41,8 +41,11 @@ public:
   inline void
   log(LogLevel level, std::format_string<Elements...> format_string, Elements &&...elements) const {
     std::ostringstream buffer;
-    auto               time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    buffer << std::put_time(std::localtime(&time), "|%F|%T|");
+    auto               clock = std::chrono::system_clock::now();
+    auto               time  = std::chrono::system_clock::to_time_t(clock);
+    auto               fine  = time_point_cast<std::chrono::milliseconds>(clock);
+    buffer << std::put_time(std::localtime(&time), "|%F|%T")
+           << std::format(".{:03d}|", fine.time_since_epoch().count() % 1000);
     std::vector<std::string> chain;
     return this->do_log(
       level, chain, buffer.str(), std::format(format_string, std::forward<Elements>(elements)...)
@@ -63,6 +66,6 @@ public:
   [[nodiscard]] Logger create_sub_logger(std::string_view name) const;
   void                 set_log_level(LogLevel new_level);
 };
-Logger &logger = Logger::get_global_logger();
+extern Logger &logger;
 } // namespace LogPP
 #endif
